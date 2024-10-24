@@ -3,6 +3,7 @@ import {
 	type MarkdownView,
 	Notice,
 	Plugin,
+	requestUrl,
 	type TFile,
 } from "obsidian";
 import { DEFAULT_SETTINGS, SettingsTab, type Settings } from "./settings";
@@ -51,15 +52,14 @@ export default class ImageUploadPlugin extends Plugin {
 			return;
 		}
 		const cachedMetadata = this.app.metadataCache.getFileCache(file);
+		if (!cachedMetadata) {
+			new Notice("No metadata for the file");
+			return;
+		}
 
-		if (
-			!(
-				cachedMetadata?.links &&
-				cachedMetadata.embeds &&
-				cachedMetadata.links.length &&
-				cachedMetadata.embeds.length
-			)
-		) {
+		const { links, embeds } = cachedMetadata;
+
+		if (!(links?.length || embeds?.length)) {
 			new Notice("Nothing to upload");
 			return;
 		}
@@ -69,19 +69,17 @@ export default class ImageUploadPlugin extends Plugin {
 				{
 					settings: this.settings,
 					uploader: upload,
-					readBinary: (...args: Parameters<TransformCtx["readBinary"]>) =>
-						this.app.vault.readBinary(...args),
-					resolveLink: (...args: Parameters<TransformCtx["resolveLink"]>) =>
+					readBinary: (...args) => this.app.vault.readBinary(...args),
+					resolveLink: (...args) =>
 						this.app.metadataCache.getFirstLinkpathDest(...args),
 					notice: (...args) => new Notice(...args),
+					requestUrl: (...args) => requestUrl(...args),
 				},
 				content,
 				{
 					selfPath: file.path,
-					// biome-ignore lint/style/noNonNullAssertion: has early return if links/embeds are empty
-					links: cachedMetadata.links!,
-					// biome-ignore lint/style/noNonNullAssertion: has early return if links/embeds are empty
-					embeds: cachedMetadata.embeds!,
+					links: links ?? [],
+					embeds: embeds ?? [],
 				},
 			);
 		}, file);

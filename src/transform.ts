@@ -5,6 +5,7 @@ import type {
 	App,
 	ReferenceCache,
 	Notice,
+	requestUrl,
 } from "obsidian";
 import type { Settings } from "./settings";
 import type { upload } from "./upload";
@@ -14,6 +15,7 @@ export type TransformCtx = {
 	uploader: typeof upload;
 	resolveLink: App["metadataCache"]["getFirstLinkpathDest"];
 	readBinary: App["vault"]["readBinary"];
+	requestUrl: typeof requestUrl;
 	notice: (...args: ConstructorParameters<typeof Notice>) => void;
 };
 
@@ -38,7 +40,10 @@ export async function transform(
 		const content = await ctx.readBinary(targetFile);
 		let url: string;
 		try {
-			url = await ctx.uploader(content, targetFile, ctx.settings);
+			url = await ctx.uploader(content, targetFile, {
+				settings: ctx.settings,
+				requestUrl: ctx.requestUrl,
+			});
 		} catch (e) {
 			console.error(e);
 			ctx.notice(`Failed to upload file: ${targetFile.path}`);

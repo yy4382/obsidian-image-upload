@@ -3,10 +3,11 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
 	plugins: [tsconfigPaths()],
+
 	test: {
 		coverage: {
 			include: "src/**/*",
-			exclude: ["src/settings.ts"],
+			exclude: ["src/settings.ts", "src/main.ts"],
 		},
 	},
 });

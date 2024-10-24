@@ -1,18 +1,24 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import type { TFile } from "obsidian";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { requestUrl, TFile } from "obsidian";
 import type { Settings } from "./settings";
 import mime from "mime";
 import { encode as encode62 } from "base62";
 
+export type UploadCtx = {
+	settings: Settings;
+	requestUrl: typeof requestUrl;
+};
+
 export async function upload(
 	binary: ArrayBuffer,
 	tFile: Pick<TFile, "basename" | "extension" | "name" | "path">,
-	settings: Settings,
+	ctx: UploadCtx,
 ): Promise<string> {
-	const key = await generateKey(binary, tFile, settings.s3.keyTemplate);
-	const client = new ImageS3Client(settings.s3);
-	await client.upload(new Uint8Array(binary), key);
-	return key;
+	const key = await generateKey(binary, tFile, ctx.settings.s3.keyTemplate);
+	const client = new ImageS3Client(ctx.settings.s3);
+	await client.upload(binary, key, ctx.requestUrl);
+	return ctx.settings.s3.publicUrl + key;
 }
 
 type TemplateParams =
@@ -90,24 +96,35 @@ class ImageS3Client {
 	 * @param key The key to use in S3
 	 * @returns The response from the S3 upload operation
 	 */
-	async upload(file: Uint8Array | string, key: string) {
+	async upload(
+		file: ArrayBuffer | string,
+		key: string,
+		requestUrlFn: typeof requestUrl,
+	) {
 		const mimeType = ImageS3Client.calculateMIME(key);
 
 		const command = new PutObjectCommand({
 			Bucket: this.bucket,
 			Key: key,
-			Body: file,
-			ContentType: mimeType,
 		});
-		const response = await this.client.send(command);
-		// If the HTTP status code is not 200, throw an error
-		// biome-ignore lint/style/noNonNullAssertion: <explanation>
-		const httpStatusCode = response.$metadata.httpStatusCode!;
-		if (httpStatusCode >= 300) {
-			throw new Error(`List operation get http code: ${httpStatusCode}`);
-		}
 
-		return response;
+		const url = await getSignedUrl(this.client, command);
+		console.log("Uploading to", url);
+
+		const resp = await requestUrlFn({
+			url,
+			method: "PUT",
+			body: file,
+			headers: {
+				"content-type": mimeType,
+			},
+			throw: false,
+		});
+
+		console.log("Upload response", resp);
+		if (resp.status !== 200) {
+			throw new Error(`Failed to upload file: ${resp.status}`);
+		}
 	}
 	static calculateMIME(key: string) {
 		const defaultMIME = "application/octet-stream";
@@ -116,5 +133,6 @@ class ImageS3Client {
 		if (keyExt) {
 			return mime.getType(keyExt) || defaultMIME;
 		}
+		return defaultMIME;
 	}
 }

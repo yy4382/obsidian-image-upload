@@ -10,6 +10,7 @@ export type Settings = {
 		keyTemplate: string;
 		region: string;
 		forcePathStyle: boolean;
+		publicUrl: string;
 	};
 	uploadExt: string;
 	useSystemTrash: boolean;
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
 		keyTemplate: "",
 		region: "",
 		forcePathStyle: false,
+		publicUrl: "",
 	},
 	uploadExt: "png jpg jpeg gif webp",
 	useSystemTrash: false,
@@ -41,7 +43,6 @@ export class SettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		// TODO: Add settings here
 		new Setting(containerEl).setHeading().setName("S3 Settings");
 		this.addTextSetting(
 			"Endpoint",
@@ -89,6 +90,14 @@ export class SettingsTab extends PluginSettingTab {
 			() => this.plugin.settings.s3.region,
 			(value) => {
 				this.plugin.settings.s3.region = value;
+			},
+		);
+		this.addTextSetting(
+			"Public URL",
+			"Public URL of the S3 service",
+			() => this.plugin.settings.s3.publicUrl ?? "",
+			(value) => {
+				this.plugin.settings.s3.publicUrl = value;
 			},
 		);
 		new Setting(containerEl)

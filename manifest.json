@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "image-uploader-for-note",
+	"name": "Image Uploader",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Upload images in a note, and if the image is only used in this note, delete it from vault.",
+	"author": "Yunfi",
+	"authorUrl": "https://yfi.moe",
 	"isDesktopOnly": false
 }

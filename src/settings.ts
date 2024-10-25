@@ -32,7 +32,43 @@ export class SettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		new Setting(containerEl).setHeading().setName("S3 settings");
+		new Setting(containerEl)
+			.setName("Upload extensions")
+			.setDesc("File extensions to upload")
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.uploadExt)
+					.onChange(async (value) => {
+						this.plugin.settings.uploadExt = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Use system trash")
+			.setDesc('Use system trash or Obsidian ".trash" folder')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.useSystemTrash)
+					.onChange(async (value) => {
+						this.plugin.settings.useSystemTrash = value;
+						await this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName("Custom uploader class")
+			.setDesc(
+				"Class(defined in CustomJS) to use for custom uploader, leave empty to use default S3",
+			)
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.customUploaderClass)
+					.onChange(async (value) => {
+						this.plugin.settings.customUploaderClass = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl).setHeading().setName("S3");
 		this.addTextSetting(
 			"Endpoint",
 			"Endpoint of the S3 service",
@@ -106,42 +142,6 @@ export class SettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
-		new Setting(containerEl).setHeading().setName("General settings");
-		new Setting(containerEl)
-			.setName("Upload extensions")
-			.setDesc("File extensions to upload")
-			.addText((text) =>
-				text
-					.setValue(this.plugin.settings.uploadExt)
-					.onChange(async (value) => {
-						this.plugin.settings.uploadExt = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-		new Setting(containerEl)
-			.setName("Use system trash")
-			.setDesc('Use system trash or Obsidian ".trash" folder')
-			.addToggle((toggle) => {
-				toggle
-					.setValue(this.plugin.settings.useSystemTrash)
-					.onChange(async (value) => {
-						this.plugin.settings.useSystemTrash = value;
-						await this.plugin.saveSettings();
-					});
-			});
-		new Setting(containerEl)
-			.setName("Custom uploader class")
-			.setDesc(
-				"Class(defined in CustomJS) to use for custom uploader, leave empty to use default S3",
-			)
-			.addText((text) =>
-				text
-					.setValue(this.plugin.settings.customUploaderClass)
-					.onChange(async (value) => {
-						this.plugin.settings.customUploaderClass = value;
-						await this.plugin.saveSettings();
-					}),
-			);
 	}
 	addTextSetting(
 		name: string,

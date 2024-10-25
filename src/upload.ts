@@ -17,8 +17,7 @@ export async function upload(
 	ctx: UploadCtx,
 ): Promise<string> {
 	const key = await generateKey(binary, tFile, ctx.settings.s3.keyTemplate);
-	const client = new ImageS3Client(ctx.settings.s3);
-	await client.upload(binary, key, tFile.extension, ctx.requestUrl);
+	await s3Upload(binary, key, tFile.extension, ctx);
 	return ctx.settings.s3.publicUrl + key;
 }
 
@@ -66,68 +65,47 @@ function randomStringGenerator(length: number) {
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	let result = "";
 	for (let i = 0; i < length; i++) {
+		// use Math.random is OK here, as it's not for security purpose
 		result += chars.charAt(Math.floor(Math.random() * chars.length));
 	}
 	return result;
 }
 
-// adapted from https://github.com/yy4382/s3-image-port/blob/21f6412991e13d567c5c06f258ed69b726b5b6b4/app/utils/ImageS3Client.ts
-class ImageS3Client {
-	client: S3Client;
-	bucket: string;
-	config: Settings["s3"];
+async function s3Upload(
+	file: ArrayBuffer | string,
+	key: string,
+	ext: string,
+	ctx: UploadCtx,
+) {
+	const config = ctx.settings.s3;
+	const client = new S3Client({
+		region: config.region,
+		forcePathStyle: config.forcePathStyle,
+		credentials: {
+			accessKeyId: config.accKeyId,
+			secretAccessKey: config.secretAccKey,
+		},
+		endpoint: config.endpoint,
+	});
 
-	constructor(s3Settings: Settings["s3"]) {
-		this.config = s3Settings;
-		this.client = new S3Client({
-			region: s3Settings.region,
-			forcePathStyle: s3Settings.forcePathStyle,
-			credentials: {
-				accessKeyId: s3Settings.accKeyId,
-				secretAccessKey: s3Settings.secretAccKey,
-			},
-			endpoint: s3Settings.endpoint,
-		});
-		this.bucket = s3Settings.bucket;
-	}
+	const command = new PutObjectCommand({
+		Bucket: config.bucket,
+		Key: key,
+	});
 
-	/**
-	 *
-	 * @param file The (processed) file to upload
-	 * @param key The key to use in S3
-	 * @returns The response from the S3 upload operation
-	 */
-	async upload(
-		file: ArrayBuffer | string,
-		key: string,
-		ext: string,
-		requestUrlFn: typeof requestUrl,
-	) {
-		const mimeType = ImageS3Client.calculateMIME(ext);
+	const url = await getSignedUrl(client, command);
 
-		const command = new PutObjectCommand({
-			Bucket: this.bucket,
-			Key: key,
-		});
+	const resp = await ctx.requestUrl({
+		url,
+		method: "PUT",
+		body: file,
+		headers: {
+			"content-type": mime.getType(ext) || "application/octet-stream",
+		},
+		throw: false,
+	});
 
-		const url = await getSignedUrl(this.client, command);
-
-		const resp = await requestUrlFn({
-			url,
-			method: "PUT",
-			body: file,
-			headers: {
-				"content-type": mimeType,
-			},
-			throw: false,
-		});
-
-		if (resp.status !== 200) {
-			throw new Error(`Failed to upload file: ${resp.status}`);
-		}
-	}
-	static calculateMIME(ext: string) {
-		const defaultMIME = "application/octet-stream";
-		return mime.getType(ext) || defaultMIME;
+	if (resp.status !== 200) {
+		throw new Error(`Failed to upload file: ${resp.status}`);
 	}
 }

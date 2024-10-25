@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/yy4382/obsidian-image-upload/actions/workflows/test.yml/badge.svg)](https://github.com/yy4382/obsidian-image-upload/actions/workflows/test.yml)
 
-A simple plugin that uploads local images in a note to S3 (and S3 compatible services), replace the image link with the S3 link, and if the image is only used in this note, the image will be deleted from the vault (optional).
+A simple plugin that uploads local images in a note to S3 (and S3 compatible services), replace the image link with the S3 link, and remove the images from the vault if they're exclusively used within that note. (optional).
 
 Or, instead of S3, you can write a custom function to upload the image via [Custom JS plugin](https://github.com/saml-dev/obsidian-custom-js).
 

@@ -3,7 +3,7 @@
 	"name": "Image Uploader",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Upload images in a note, and if the image is only used in this note, delete it from vault.",
+	"description": "Upload images in a note, and remove the images from the vault if they're exclusively used within that note.",
 	"author": "Yunfi",
 	"authorUrl": "https://yfi.moe",
 	"isDesktopOnly": false

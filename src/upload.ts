@@ -28,6 +28,7 @@ type TemplateParams =
 	| "random2"
 	| "random6"
 	| "base62_of_ms_from_day_start"
+	| "path"
 	| "name"
 	| "basename"
 	| "extension";
@@ -46,6 +47,7 @@ export async function generateKey(
 		base62_of_ms_from_day_start: encode62(
 			Date.now() - new Date().setHours(0, 0, 0, 0),
 		),
+		path: tFile.path,
 		name: tFile.name,
 		basename: tFile.basename,
 		extension: tFile.extension,

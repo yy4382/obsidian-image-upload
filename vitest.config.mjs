@@ -10,8 +10,7 @@ export default defineConfig({
 	},
 	test: {
 		coverage: {
-			include: "src/**/*",
-			exclude: ["src/settings.ts", "src/main.ts"],
+			include: ["src/transform.ts", "upload.ts"],
 		},
 	},
 });

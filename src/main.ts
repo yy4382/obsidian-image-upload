@@ -50,6 +50,10 @@ export default class ImageUploadPlugin extends Plugin {
 
 		new Notice(`Uploaded and replaced ${uploadedFiles.length} links`);
 
+		if (!uploadedFiles.length) {
+			return;
+		}
+
 		await this.deleteUploadedFiles(uploadedFiles, file);
 	}
 

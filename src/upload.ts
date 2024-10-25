@@ -18,7 +18,9 @@ export async function upload(
 ): Promise<string> {
 	const key = await generateKey(binary, tFile, ctx.settings.s3.keyTemplate);
 	await s3Upload(binary, key, tFile.extension, ctx);
-	return ctx.settings.s3.publicUrl + key;
+	let pubUrl = ctx.settings.s3.publicUrl;
+	pubUrl = pubUrl.endsWith("/") ? pubUrl : `${pubUrl}/`;
+	return pubUrl + key;
 }
 
 type TemplateParams =

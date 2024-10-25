@@ -132,8 +132,9 @@ async function asyncProcess<T>(
 			new Notice(
 				"File has been updated during processing. User modified content will be concatenated to the end of the file",
 			);
+			return `${newContent}\n\`\`\`\n<!--Modified version while processing-->\n${data}\n\`\`\`\n`;
 		}
-		return `${newContent}\n\`\`\`\n<!--Modified version while processing-->\n${data}\n\`\`\`\n`;
+		return newContent;
 	});
 	return other;
 }

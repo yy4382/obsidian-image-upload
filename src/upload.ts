@@ -18,7 +18,7 @@ export async function upload(
 ): Promise<string> {
 	const key = await generateKey(binary, tFile, ctx.settings.s3.keyTemplate);
 	const client = new ImageS3Client(ctx.settings.s3);
-	await client.upload(binary, key, ctx.requestUrl);
+	await client.upload(binary, key, tFile.extension, ctx.requestUrl);
 	return ctx.settings.s3.publicUrl + key;
 }
 
@@ -100,9 +100,10 @@ class ImageS3Client {
 	async upload(
 		file: ArrayBuffer | string,
 		key: string,
+		ext: string,
 		requestUrlFn: typeof requestUrl,
 	) {
-		const mimeType = ImageS3Client.calculateMIME(key);
+		const mimeType = ImageS3Client.calculateMIME(ext);
 
 		const command = new PutObjectCommand({
 			Bucket: this.bucket,
@@ -110,7 +111,6 @@ class ImageS3Client {
 		});
 
 		const url = await getSignedUrl(this.client, command);
-		console.log("Uploading to", url);
 
 		const resp = await requestUrlFn({
 			url,
@@ -122,18 +122,12 @@ class ImageS3Client {
 			throw: false,
 		});
 
-		console.log("Upload response", resp);
 		if (resp.status !== 200) {
 			throw new Error(`Failed to upload file: ${resp.status}`);
 		}
 	}
-	static calculateMIME(key: string) {
+	static calculateMIME(ext: string) {
 		const defaultMIME = "application/octet-stream";
-		const keyExt = key.split(".").pop();
-
-		if (keyExt) {
-			return mime.getType(keyExt) || defaultMIME;
-		}
-		return defaultMIME;
+		return mime.getType(ext) || defaultMIME;
 	}
 }

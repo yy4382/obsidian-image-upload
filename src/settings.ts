@@ -15,20 +15,8 @@ export type Settings = {
 	uploadExt: string;
 	useSystemTrash: boolean;
 };
-export const DEFAULT_SETTINGS: Settings = {
-	s3: {
-		endpoint: "",
-		accKeyId: "",
-		secretAccKey: "",
-		bucket: "",
-		keyTemplate: "",
-		region: "",
-		forcePathStyle: false,
-		publicUrl: "",
-	},
-	uploadExt: "png jpg jpeg gif webp",
-	useSystemTrash: false,
-};
+
+export { DEFAULT_SETTINGS } from "./constants";
 
 export class SettingsTab extends PluginSettingTab {
 	plugin: ImageUploadPlugin;

@@ -5,7 +5,7 @@ import { upload } from "./upload";
 import { createPromiseWithResolver, DeleteConfirmModal } from "./confirm-modal";
 
 declare global {
-	var cJS: () => Promise<unknown>;
+	const cJS: () => Promise<unknown>;
 }
 
 export type PTFile = Pick<TFile, "basename" | "extension" | "name" | "path">;

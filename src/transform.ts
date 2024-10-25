@@ -5,17 +5,17 @@ import type {
 	App,
 	ReferenceCache,
 	Notice,
-	requestUrl,
+	Vault,
+	MetadataCache,
 } from "obsidian";
 import type { Settings } from "./settings";
-import type { upload } from "./upload";
+import type { PTFile } from "./main";
 
 export type TransformCtx = {
 	settings: Settings;
-	uploader: typeof upload;
-	resolveLink: App["metadataCache"]["getFirstLinkpathDest"];
-	readBinary: App["vault"]["readBinary"];
-	requestUrl: typeof requestUrl;
+	uploader: (binary: ArrayBuffer, tFile: PTFile) => Promise<string>;
+	resolveLink: MetadataCache["getFirstLinkpathDest"];
+	readBinary: Vault["readBinary"];
 	notice: (...args: ConstructorParameters<typeof Notice>) => void;
 };
 
@@ -28,36 +28,38 @@ export async function transform(
 		embeds: EmbedCache[];
 	},
 ): Promise<[string, string[]]> {
-	const actions: [Pos, string, string][] = [];
-
 	const process = async (link: ReferenceCache, isEmbed: boolean) => {
 		const targetFile = ctx.resolveLink(link.link.split("#")[0], meta.selfPath);
-		if (
-			!targetFile ||
-			!ctx.settings.uploadExt.split(" ").includes(targetFile.extension)
-		)
+		if (!targetFile) {
+			ctx.notice(`File "${link.original}" not found in vault.`);
 			return;
+		}
+		if (!ctx.settings.uploadExt.split(" ").includes(targetFile.extension)) {
+			ctx.notice(
+				`File "${targetFile.basename}" won't be uploaded for having extension "${targetFile.extension}".
+Go to settings to configure that.`,
+			);
+			return;
+		}
 		const content = await ctx.readBinary(targetFile);
 		let url: string;
 		try {
-			url = await ctx.uploader(content, targetFile, {
-				settings: ctx.settings,
-				requestUrl: ctx.requestUrl,
-			});
+			url = await ctx.uploader(content, targetFile);
 		} catch (e) {
 			console.error(e);
 			ctx.notice(`Failed to upload file: ${targetFile.path}`);
 			return;
 		}
 		const newLink = `${isEmbed ? "!" : ""}[${link.displayText ?? link.link}](${url})`;
-		actions.push([link.position, newLink, targetFile.path]);
+		return [link.position, newLink, targetFile.path] as [Pos, string, string];
 	};
 
-	await Promise.all(
-		meta.links
-			.map((link) => process(link, false))
-			.concat(meta.embeds.map((embed) => process(embed, true))),
-	);
+	const actions = (
+		await Promise.all([
+			...meta.links.map((link) => process(link, false)),
+			...meta.embeds.map((embed) => process(embed, true)),
+		])
+	).filter((x) => x !== undefined);
 
 	const newContent = replace(content, actions);
 	const uploadedPaths = dedupe(actions.map(([, , path]) => path));

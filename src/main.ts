@@ -1,14 +1,9 @@
-import {
-	type Editor,
-	type MarkdownView,
-	Notice,
-	Plugin,
-	requestUrl,
-	type TFile,
-} from "obsidian";
+import { Notice, Plugin, requestUrl, type TFile } from "obsidian";
 import { DEFAULT_SETTINGS, SettingsTab, type Settings } from "./settings";
-import { getDeletingFiles, transform, type TransformCtx } from "./transform";
+import { getDeletingFiles, transform } from "./transform";
 import { upload } from "./upload";
+
+export type PTFile = Pick<TFile, "basename" | "extension" | "name" | "path">;
 
 export default class ImageUploadPlugin extends Plugin {
 	settings: Settings;
@@ -22,14 +17,14 @@ export default class ImageUploadPlugin extends Plugin {
 		);
 
 		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: "sample-editor-command",
-			name: "Sample editor command",
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection("Sample Editor Command");
-			},
-		});
+		// this.addCommand({
+		// 	id: "sample-editor-command",
+		// 	name: "Sample editor command",
+		// 	editorCallback: (editor: Editor, view: MarkdownView) => {
+		// 		console.log(editor.getSelection());
+		// 		editor.replaceSelection("Sample Editor Command");
+		// 	},
+		// });
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
@@ -53,7 +48,7 @@ export default class ImageUploadPlugin extends Plugin {
 		}
 		const cachedMetadata = this.app.metadataCache.getFileCache(file);
 		if (!cachedMetadata) {
-			new Notice("No metadata for the file");
+			new Notice("No assets in cache");
 			return;
 		}
 
@@ -68,12 +63,15 @@ export default class ImageUploadPlugin extends Plugin {
 			return transform(
 				{
 					settings: this.settings,
-					uploader: upload,
+					uploader: (binary, file) =>
+						upload(binary, file, {
+							settings: this.settings,
+							requestUrl: (...args) => requestUrl(...args),
+						}),
 					readBinary: (...args) => this.app.vault.readBinary(...args),
 					resolveLink: (...args) =>
 						this.app.metadataCache.getFirstLinkpathDest(...args),
 					notice: (...args) => new Notice(...args),
-					requestUrl: (...args) => requestUrl(...args),
 				},
 				content,
 				{

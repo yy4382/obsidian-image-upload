@@ -4,6 +4,7 @@ import type { requestUrl, TFile } from "obsidian";
 import type { Settings } from "./settings";
 import mime from "mime";
 import { encode as encode62 } from "base62";
+import type { PTFile } from "./main";
 
 export type UploadCtx = {
 	settings: Settings;
@@ -12,7 +13,7 @@ export type UploadCtx = {
 
 export async function upload(
 	binary: ArrayBuffer,
-	tFile: Pick<TFile, "basename" | "extension" | "name" | "path">,
+	tFile: PTFile,
 	ctx: UploadCtx,
 ): Promise<string> {
 	const key = await generateKey(binary, tFile, ctx.settings.s3.keyTemplate);
@@ -34,7 +35,7 @@ type TemplateParams =
 
 export async function generateKey(
 	binary: ArrayBuffer,
-	tFile: Pick<TFile, "basename" | "extension" | "name" | "path">,
+	tFile: PTFile,
 	keyTemplate: string,
 ): Promise<string> {
 	const params: Record<TemplateParams, string> = {

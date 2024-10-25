@@ -2,6 +2,7 @@ import { Notice, Plugin, requestUrl, type TFile } from "obsidian";
 import { DEFAULT_SETTINGS, SettingsTab, type Settings } from "./settings";
 import { getDeletingFiles, transform } from "./transform";
 import { upload } from "./upload";
+import { createPromiseWithResolver, DeleteConfirmModal } from "./confirm-modal";
 
 export type PTFile = Pick<TFile, "basename" | "extension" | "name" | "path">;
 
@@ -46,6 +47,18 @@ export default class ImageUploadPlugin extends Plugin {
 			new Notice("No active file");
 			return;
 		}
+		const uploadedFiles = await this.uploadAndReplace(file);
+
+		if (!uploadedFiles) {
+			return;
+		}
+
+		new Notice(`Uploaded and replaced ${uploadedFiles.length} links`);
+
+		await this.deleteUploadedFiles(uploadedFiles, file);
+	}
+
+	async uploadAndReplace(file: TFile) {
 		const cachedMetadata = this.app.metadataCache.getFileCache(file);
 		if (!cachedMetadata) {
 			new Notice("No assets in cache");
@@ -82,12 +95,25 @@ export default class ImageUploadPlugin extends Plugin {
 			);
 		}, file);
 
+		return uploadedFiles;
+	}
+	async deleteUploadedFiles(uploadedFiles: string[], file: TFile) {
 		const filesToDelete = getDeletingFiles(
 			uploadedFiles,
 			this.app.metadataCache.resolvedLinks,
 			file.path,
 		);
+
 		console.log("Files to delete", filesToDelete);
+		const { promise: confirmPromise, handler } = createPromiseWithResolver();
+		new DeleteConfirmModal(this.app, handler, filesToDelete).open();
+		try {
+			await confirmPromise;
+		} catch {
+			new Notice("Deletion aborted");
+			return;
+		}
+
 		for (const filePath of filesToDelete) {
 			const file = this.app.vault.getFileByPath(filePath);
 			if (!file) {

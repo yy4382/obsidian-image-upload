@@ -8,6 +8,8 @@ Or, instead of S3, you can write a custom function to upload the image via [Cust
 
 ## Usage
 
+Use the button on Ribbon or the command palette to upload images in currently opened note.
+
 ### Use S3 uploader
 
 1. Fill in the S3 configuration in the settings.

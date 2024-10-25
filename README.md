@@ -53,3 +53,9 @@ class CustomUploader {
 ```
 
 Then set the `Custom Uploader Class` option in the settings to `CustomUploader`.
+
+## What the difference between this plugin and others?
+
+- this plugin can remove the local images from the vault if they're exclusively used within that note (and this behaviour is optional). This is useful if you want to keep your vault clean.
+- this plugin is more flexible, you can write your own uploader class to upload images to any service you want.
+- upload images by manually trigger, not when pasting images. This prevents uploading images that you don't want to upload.

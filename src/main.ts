@@ -103,7 +103,6 @@ export default class ImageUploadPlugin extends Plugin {
 			file.path,
 		);
 
-		console.log("Files to delete", filesToDelete);
 		const { promise: confirmPromise, handler } = createPromiseWithResolver();
 		new DeleteConfirmModal(this.app, handler, filesToDelete).open();
 		try {

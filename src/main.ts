@@ -124,21 +124,16 @@ async function asyncProcess<T>(
 	action: (content: string) => Promise<[string, T]>,
 	file: TFile,
 ): Promise<T> {
-	new Notice("Processing file, DO NOT MODIFY THE FILE UNTIL DONE");
+	new Notice("Processing file. DO NOT MODIFY THE FILE UNTIL DONE");
 	const content = await file.vault.cachedRead(file);
 	const [newContent, other] = await action(content);
 	await file.vault.process(file, (data) => {
 		if (data !== content) {
 			new Notice(
-				"File has been updated during processing, and will be overwritten. Open dev tools to see the old one",
+				"File has been updated during processing. User modified content will be concatenated to the end of the file",
 			);
-			console.warn("Content modified during processing\n", {
-				original: content,
-				new: newContent,
-				overwritten: data,
-			});
 		}
-		return newContent;
+		return `${newContent}\n\`\`\`\n<!--Modified version while processing-->\n${data}\n\`\`\`\n`;
 	});
 	return other;
 }

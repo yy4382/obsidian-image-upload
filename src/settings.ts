@@ -12,6 +12,7 @@ export type Settings = {
 		forcePathStyle: boolean;
 		publicUrl: string;
 	};
+	customUploaderClass: string;
 	uploadExt: string;
 	useSystemTrash: boolean;
 };
@@ -119,6 +120,17 @@ export class SettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				});
 		});
+		new Setting(containerEl)
+			.setName("Custom Uploader Class")
+			.setDesc("Class to use for custom uploader, leave empty for default S3")
+			.addText((text) =>
+				text
+					.setValue(this.plugin.settings.customUploaderClass)
+					.onChange(async (value) => {
+						this.plugin.settings.customUploaderClass = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 	}
 	addTextSetting(
 		name: string,

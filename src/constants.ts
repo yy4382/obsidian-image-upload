@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: Settings = {
 		forcePathStyle: false,
 		publicUrl: "",
 	},
+	customUploaderClass: "",
 	uploadExt: "png jpg jpeg gif webp",
 	useSystemTrash: false,
 };

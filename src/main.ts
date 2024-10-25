@@ -4,6 +4,10 @@ import { getDeletingFiles, transform } from "./transform";
 import { upload } from "./upload";
 import { createPromiseWithResolver, DeleteConfirmModal } from "./confirm-modal";
 
+declare global {
+	var cJS: () => Promise<unknown>;
+}
+
 export type PTFile = Pick<TFile, "basename" | "extension" | "name" | "path">;
 
 export default class ImageUploadPlugin extends Plugin {
@@ -71,15 +75,11 @@ export default class ImageUploadPlugin extends Plugin {
 			return;
 		}
 
-		const uploadedFiles = await asyncProcess((content: string) => {
+		const uploadedFiles = await asyncProcess(async (content: string) => {
 			return transform(
 				{
 					settings: this.settings,
-					uploader: (binary, file) =>
-						upload(binary, file, {
-							settings: this.settings,
-							requestUrl: (...args) => requestUrl(...args),
-						}),
+					uploader: await this.getUploader(),
 					readBinary: (...args) => this.app.vault.readBinary(...args),
 					resolveLink: (...args) =>
 						this.app.metadataCache.getFirstLinkpathDest(...args),
@@ -121,6 +121,60 @@ export default class ImageUploadPlugin extends Plugin {
 			}
 			await this.app.vault.trash(file, this.settings.useSystemTrash);
 		}
+	}
+
+	async getUploader(): Promise<
+		(binary: ArrayBuffer, file: PTFile) => Promise<string>
+	> {
+		const { settings } = this;
+		const className = settings.customUploaderClass;
+
+		// If no class is provided, use the default S3 uploader
+		if (!className) {
+			return async (binary, file) => {
+				return upload(binary, file, {
+					settings,
+					requestUrl: (...args) => requestUrl(...args),
+				});
+			};
+		}
+		let cJsObj: unknown;
+		try {
+			cJsObj = await cJS();
+		} catch (e) {
+			new Notice("Failed to load Custom JS");
+			throw e;
+		}
+
+		if (!(cJsObj && typeof cJsObj === "object" && className in cJsObj)) {
+			new Notice(`Class "${className}" not found in custom JS`);
+			throw new Error(`Class "${className}" not found in custom JS`);
+		}
+		const uploaderClass = (cJsObj as Record<string, unknown>)[className];
+
+		if (
+			!(
+				uploaderClass &&
+				typeof uploaderClass === "object" &&
+				"upload" in uploaderClass &&
+				typeof uploaderClass.upload === "function"
+			)
+		) {
+			new Notice(`Method "upload" not found in class "${className}"`);
+			throw new Error(`Method "upload" not found in class "${className}`);
+		}
+
+		return async (binary, file) => {
+			const result = await (
+				uploaderClass as {
+					upload: (binary: ArrayBuffer, file: PTFile) => Promise<unknown>;
+				}
+			).upload(binary, file);
+			if (typeof result !== "string") {
+				throw new Error("Result is not a string");
+			}
+			return result;
+		};
 	}
 }
 

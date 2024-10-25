@@ -9,6 +9,7 @@ export default defineConfig({
 		},
 	},
 	test: {
+		globalSetup: "./test/global-setup.ts",
 		coverage: {
 			include: ["src/transform.ts", "upload.ts"],
 		},

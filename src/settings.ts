@@ -32,7 +32,7 @@ export class SettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		new Setting(containerEl).setHeading().setName("S3 Settings");
+		new Setting(containerEl).setHeading().setName("S3 settings");
 		this.addTextSetting(
 			"Endpoint",
 			"Endpoint of the S3 service",
@@ -42,23 +42,23 @@ export class SettingsTab extends PluginSettingTab {
 			},
 		);
 		this.addTextSetting(
-			"Access Key ID",
-			"Access Key ID for the S3 service",
+			"Access key ID",
+			"Access key ID for the S3 service",
 			() => this.plugin.settings.s3.accKeyId,
 			(value) => {
 				this.plugin.settings.s3.accKeyId = value;
 			},
 		);
 		this.addTextSetting(
-			"Secret Access Key",
-			"Secret Access Key for the S3 service",
+			"Secret access ey",
+			"Secret access key for the S3 service",
 			() => this.plugin.settings.s3.secretAccKey,
 			(value) => {
 				this.plugin.settings.s3.secretAccKey = value;
 			},
 		);
 		this.addTextSetting(
-			"Bucket",
+			"Bucket name",
 			"Bucket to upload to",
 			() => this.plugin.settings.s3.bucket,
 			(value) => {
@@ -66,8 +66,8 @@ export class SettingsTab extends PluginSettingTab {
 			},
 		);
 		this.addTextSetting(
-			"Key Template",
-			"Template for the key to use in S3",
+			"Key template",
+			"Template for the key(path) to use in S3. Template in {{}} will be replaced.\nAvailable variables: year, month, day, random2, random6, base62_of_ms_from_day_start, path, name, basename, extension",
 			() => this.plugin.settings.s3.keyTemplate,
 			(value) => {
 				this.plugin.settings.s3.keyTemplate = value;
@@ -83,14 +83,20 @@ export class SettingsTab extends PluginSettingTab {
 		);
 		this.addTextSetting(
 			"Public URL",
-			"Public URL of the S3 service",
+			"URL prefix to access the uploaded files",
 			() => this.plugin.settings.s3.publicUrl ?? "",
 			(value) => {
 				this.plugin.settings.s3.publicUrl = value;
 			},
 		);
+
+		containerEl.createEl("p", {
+			text: "For example, if the public URL is 'https://example.com' and the key template is '{{path}}', the uploaded file (has path 'path/to/file.jpg') will be accessible at 'https://example.com/path/to/file.jpg'",
+			cls: "setting-item-description",
+		});
+
 		new Setting(containerEl)
-			.setName("Force Path Style")
+			.setName("Force path style")
 			.setDesc("Whether to use path-style addressing")
 			.addToggle((toggle) => {
 				toggle
@@ -100,10 +106,10 @@ export class SettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
-		new Setting(containerEl).setHeading().setName("General Settings");
+		new Setting(containerEl).setHeading().setName("General settings");
 		new Setting(containerEl)
-			.setName("Upload Extensions")
-			.setDesc("Extensions to upload")
+			.setName("Upload extensions")
+			.setDesc("File extensions to upload")
 			.addText((text) =>
 				text
 					.setValue(this.plugin.settings.uploadExt)
@@ -112,17 +118,22 @@ export class SettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
-		new Setting(containerEl).setName("Use System Trash").addToggle((toggle) => {
-			toggle
-				.setValue(this.plugin.settings.useSystemTrash)
-				.onChange(async (value) => {
-					this.plugin.settings.useSystemTrash = value;
-					await this.plugin.saveSettings();
-				});
-		});
 		new Setting(containerEl)
-			.setName("Custom Uploader Class")
-			.setDesc("Class to use for custom uploader, leave empty for default S3")
+			.setName("Use system trash")
+			.setDesc('Use system trash or Obsidian ".trash" folder')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.useSystemTrash)
+					.onChange(async (value) => {
+						this.plugin.settings.useSystemTrash = value;
+						await this.plugin.saveSettings();
+					});
+			});
+		new Setting(containerEl)
+			.setName("Custom uploader class")
+			.setDesc(
+				"Class(defined in CustomJS) to use for custom uploader, leave empty to use default S3",
+			)
 			.addText((text) =>
 				text
 					.setValue(this.plugin.settings.customUploaderClass)

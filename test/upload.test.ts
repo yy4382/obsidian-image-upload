@@ -130,9 +130,7 @@ describe("upload", () => {
 
 		const url = await upload(binary, tFile, ctx);
 		expect(url).toEqual("https://example.com/obsidian/2024/02/01/3amOI.kkk");
-		expect(JSON.parse(params)?.headers["content-type"]).toEqual(
-			"application/octet-stream",
-		);
+		expect(JSON.parse(params)?.contentType).toEqual("application/octet-stream");
 	});
 
 	test("upload fail", async () => {

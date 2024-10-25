@@ -99,9 +99,7 @@ async function s3Upload(
 		url,
 		method: "PUT",
 		body: file,
-		headers: {
-			"content-type": mime.getType(ext) || "application/octet-stream",
-		},
+		contentType: mime.getType(ext) || "application/octet-stream",
 		throw: false,
 	});
 

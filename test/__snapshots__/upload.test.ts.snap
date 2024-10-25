@@ -4,9 +4,7 @@ exports[`upload > upload 1`] = `
 [
   {
     "body": {},
-    "headers": {
-      "content-type": "image/png",
-    },
+    "contentType": "image/png",
     "method": "PUT",
     "throw": false,
     "url": "https://bucket.api.example.com/obsidian/2024/02/01/3amOI.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=Abc%2F20240201%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20240201T210000Z&X-Amz-Expires=900&X-Amz-Signature=855d552294c58a9eb91a2d9ed21abc224a8a8e35568e6e7423e71b3b8e34e2fc&X-Amz-SignedHeaders=host&x-id=PutObject",

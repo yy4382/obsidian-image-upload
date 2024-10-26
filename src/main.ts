@@ -166,7 +166,7 @@ export default class ImageUploadPlugin extends Plugin {
 		return async (binary, file) => {
 			const result = await (
 				uploaderClass as {
-					upload: (binary: ArrayBuffer, file: PTFile) => Promise<unknown>;
+					upload: (...args: unknown[]) => Promise<unknown>;
 				}
 			).upload(binary, file);
 			if (typeof result !== "string") {

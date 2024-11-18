@@ -167,7 +167,8 @@ function makeCtx(resolve: Record<string, PTFile>): TransformCtx {
 	return {
 		settings: DEFAULT_SETTINGS,
 		uploader: async (_, file) => `https://example.com/${file.path}`,
-		resolveLink: (link, selfPath) => resolve[link] as TFile,
+		// @ts-expect-error should be TFile, but it's PTFile in test
+		resolveLink: (link) => resolve[link],
 		readBinary: async () => new ArrayBuffer(0),
 		notice,
 	};

@@ -20,7 +20,7 @@ export async function upload(
 	await s3Upload(binary, key, tFile.extension, ctx);
 	let pubUrl = ctx.settings.s3.publicUrl;
 	pubUrl = pubUrl.endsWith("/") ? pubUrl : `${pubUrl}/`;
-	return pubUrl + key;
+	return pubUrl + encodeURI(key);
 }
 
 type TemplateParams =

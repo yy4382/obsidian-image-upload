@@ -168,4 +168,38 @@ describe("upload", () => {
 			await upload(binary, tFile, ctx);
 		}).rejects.toThrowError("400");
 	});
+
+	test("upload with spaces in filename", async () => {
+		const binary = new Uint32Array([1, 2, 3]).buffer;
+		const tFile = {
+			basename: "file with spaces",
+			extension: "png",
+			name: "file with spaces.png",
+			path: "folder/file with spaces.png",
+		};
+
+		const requestUrl: typeof ru = (...args) => {
+			return Promise.resolve({
+				status: 200,
+			}) as RequestUrlResponsePromise;
+		};
+		const ctx: UploadCtx = {
+			settings: Object.assign(DEFAULT_SETTINGS, {
+				s3: {
+					bucket: "bucket",
+					endpoint: "https://api.example.com",
+					keyTemplate: "{{name}}",
+					forcePathStyle: false,
+					publicUrl: "https://example.com/",
+					region: "auto",
+					accKeyId: "Abc",
+					secretAccKey: "Def",
+				},
+			}),
+			requestUrl,
+		};
+
+		const url = await upload(binary, tFile, ctx);
+		expect(url).toEqual("https://example.com/file%20with%20spaces.png");
+	});
 });

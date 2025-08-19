@@ -1,6 +1,6 @@
 {
 	"name": "image-uploader-for-note",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Upload images in a note, and remove the images from the vault if they're exclusively used within that note.",
 	"main": "main.js",
 	"scripts": {
